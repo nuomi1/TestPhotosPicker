@@ -13,18 +13,22 @@ extension Project {
                                      dependencies: additionalTargets.map { TargetDependency.target(name: $0) })
         targets += additionalTargets.flatMap({ makeFrameworkTargets(name: $0, platform: platform) })
         return Project(name: name,
-                       organizationName: "tuist.io",
+                       organizationName: organizationName,
                        targets: targets)
     }
 
     // MARK: - Private
+
+    private static let organizationName = "CUSTOM_USER_NAME"
+    private static let bundlePrefix = "com.\(organizationName)"
+    private static let devTeam = "CUSTOM_TEAM_ID"
 
     /// Helper function to create a framework target and an associated unit test target
     private static func makeFrameworkTargets(name: String, platform: Platform) -> [Target] {
         let sources = Target(name: name,
                 platform: platform,
                 product: .framework,
-                bundleId: "io.tuist.\(name)",
+                bundleId: "\(bundlePrefix).\(name)",
                 infoPlist: .default,
                 sources: ["Targets/\(name)/Sources/**"],
                 resources: [],
@@ -32,7 +36,7 @@ extension Project {
         let tests = Target(name: "\(name)Tests",
                 platform: platform,
                 product: .unitTests,
-                bundleId: "io.tuist.\(name)Tests",
+                bundleId: "\(bundlePrefix).\(name)Tests",
                 infoPlist: .default,
                 sources: ["Targets/\(name)/Tests/**"],
                 resources: [],
@@ -54,18 +58,19 @@ extension Project {
             name: name,
             platform: platform,
             product: .app,
-            bundleId: "io.tuist.\(name)",
+            bundleId: "\(bundlePrefix).\(name)",
             infoPlist: .extendingDefault(with: infoPlist),
             sources: ["Targets/\(name)/Sources/**"],
             resources: ["Targets/\(name)/Resources/**"],
-            dependencies: dependencies
+            dependencies: dependencies,
+            settings: .settings(base: .init().automaticCodeSigning(devTeam: devTeam))
         )
 
         let testTarget = Target(
             name: "\(name)Tests",
             platform: platform,
             product: .unitTests,
-            bundleId: "io.tuist.\(name)Tests",
+            bundleId: "\(bundlePrefix).\(name)Tests",
             infoPlist: .default,
             sources: ["Targets/\(name)/Tests/**"],
             dependencies: [
