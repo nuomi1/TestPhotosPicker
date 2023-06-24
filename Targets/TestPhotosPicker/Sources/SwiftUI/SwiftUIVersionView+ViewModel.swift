@@ -1,0 +1,103 @@
+//
+//  SwiftUIVersionView+ViewModel.swift
+//  TestPhotosPicker
+//
+//  Created by nuomi1 on 2023-06-19.
+//  Copyright © 2023 nuomi1. All rights reserved.
+//
+
+import Foundation
+import PhotosUI
+import SwiftUI
+
+extension SwiftUIVersionView {
+
+    @MainActor
+    class ViewModel: ObservableObject {
+
+        @Published
+        var selection: [PhotosPickerItem] = [] {
+            didSet { updateImagesIfNeeded() }
+        }
+
+        @Published
+        var attachments: [ImageAttachment] = []
+
+        private var attachmentByIdentifier: [String: ImageAttachment] = [:]
+
+        private func updateImagesIfNeeded() {
+            let newAttachments = selection.map { attachmentByIdentifier[$0.id] ?? ImageAttachment($0) }
+            let newAttachmentByIdentifier = newAttachments.reduce(into: [:]) { $0[$1.id] = $1 }
+            attachments = newAttachments
+            attachmentByIdentifier = newAttachmentByIdentifier
+        }
+    }
+}
+
+extension SwiftUIVersionView.ViewModel {
+
+    @MainActor
+    class ImageAttachment: ObservableObject, Identifiable {
+
+        enum Status {
+            case loading
+            case finished(Image)
+            case failed(Error)
+
+            var isFailed: Bool {
+                switch self {
+                case .loading, .finished:
+                    return false
+                case .failed:
+                    return true
+                }
+            }
+        }
+
+        enum LoadingError: Error {
+            case contentTypeNotSupported
+        }
+
+        private let pickerItem: PhotosPickerItem
+
+        @Published
+        var imageStatus: Status?
+
+        @Published
+        var imageDescription = ""
+
+        nonisolated var id: String { pickerItem.id }
+
+        init(_ pickerItem: PhotosPickerItem) {
+            self.pickerItem = pickerItem
+        }
+
+        func loadImage() async {
+            guard imageStatus == nil || imageStatus?.isFailed == true else { return }
+
+            imageStatus = .loading
+
+            do {
+//                if let image = try await pickerItem.loadTransferable(type: Image.self) {
+//                    imageStatus = .finished(image)
+//                } else {
+//                    throw LoadingError.contentTypeNotSupported
+//                }
+                if let data = try await pickerItem.loadTransferable(type: Data.self), let uiImage = UIImage(data: data) {
+                    imageStatus = Bool.random() ? .finished(Image(uiImage: uiImage)) : .failed(LoadingError.contentTypeNotSupported)
+                } else {
+                    throw LoadingError.contentTypeNotSupported
+                }
+            } catch {
+                imageStatus = .failed(error)
+            }
+        }
+    }
+}
+
+// MARK: - DON'T DO THIS IN PRODUCTION
+
+extension PhotosPickerItem: Identifiable {
+
+    public var id: String { itemIdentifier! }
+}
