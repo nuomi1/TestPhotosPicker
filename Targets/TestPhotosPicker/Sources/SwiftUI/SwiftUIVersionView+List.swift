@@ -47,7 +47,7 @@ extension SwiftUIVersionView {
                 switch imageAttachment.imageStatus {
                 case .loading:
                     ProgressView()
-                case let .finished(image):
+                case let .image(image):
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)

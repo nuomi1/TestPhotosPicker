@@ -22,14 +22,14 @@ extension UIKitVersionView.UIKitVersionViewController {
 
         enum Status {
             case loading
-            case finished(UIImage)
+            case image(UIImage)
             case failed(Error)
 
             var isLoading: Bool {
                 switch self {
                 case .loading:
                     return true
-                case .finished, .failed:
+                case .image, .failed:
                     return false
                 }
             }
@@ -38,14 +38,14 @@ extension UIKitVersionView.UIKitVersionViewController {
                 switch self {
                 case .loading, .failed:
                     return nil
-                case let .finished(image):
+                case let .image(image):
                     return image
                 }
             }
 
             var isFailed: Bool {
                 switch self {
-                case .loading, .finished:
+                case .loading, .image:
                     return false
                 case .failed:
                     return true
@@ -84,7 +84,7 @@ extension UIKitVersionView.UIKitVersionViewController {
                 }
 
                 if let uiImage = UIImage(data: data) {
-                    imageStatus = .finished(uiImage)
+                    imageStatus = .image(uiImage)
                 } else {
                     throw LoadingError.contentTypeNotSupported
                 }

@@ -22,12 +22,12 @@ extension SwiftUIVersionView {
 
         enum Status {
             case loading
-            case finished(Image)
+            case image(Image)
             case failed(Error)
 
             var isFailed: Bool {
                 switch self {
-                case .loading, .finished:
+                case .loading, .image:
                     return false
                 case .failed:
                     return true
@@ -60,12 +60,12 @@ extension SwiftUIVersionView {
 
             do {
 //                if let image = try await pickerItem.loadTransferable(type: Image.self) {
-//                    imageStatus = .finished(image)
+//                    imageStatus = .image(image)
 //                } else {
 //                    throw LoadingError.contentTypeNotSupported
 //                }
                 if let data = try await pickerItem.loadTransferable(type: Data.self), let uiImage = UIImage(data: data) {
-                    imageStatus = .finished(Image(uiImage: uiImage))
+                    imageStatus = .image(Image(uiImage: uiImage))
                 } else {
                     throw LoadingError.contentTypeNotSupported
                 }
