@@ -84,7 +84,7 @@ extension UIKitVersionView.UIKitVersionViewController {
                 }
 
                 if let uiImage = UIImage(data: data) {
-                    imageStatus = Bool.random() ? .finished(uiImage) : .failed(LoadingError.contentTypeNotSupported)
+                    imageStatus = .finished(uiImage)
                 } else {
                     throw LoadingError.contentTypeNotSupported
                 }

@@ -65,7 +65,7 @@ extension SwiftUIVersionView {
 //                    throw LoadingError.contentTypeNotSupported
 //                }
                 if let data = try await pickerItem.loadTransferable(type: Data.self), let uiImage = UIImage(data: data) {
-                    imageStatus = Bool.random() ? .finished(Image(uiImage: uiImage)) : .failed(LoadingError.contentTypeNotSupported)
+                    imageStatus = .finished(Image(uiImage: uiImage))
                 } else {
                     throw LoadingError.contentTypeNotSupported
                 }
