@@ -24,7 +24,7 @@ extension UIKitVersionView.UIKitVersionViewController {
 
     func makeDataSource() -> UICollectionViewDiffableDataSource<String, ViewModel.ImageAttachment> {
         let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, ViewModel.ImageAttachment> { cell, _, itemIdentifier in
-            var contentConfiguration = ImageCell.ContentConfiguration()
+            var contentConfiguration = ImageAttachmentView.ContentConfiguration()
             contentConfiguration.imageAttachment = itemIdentifier
             cell.contentConfiguration = contentConfiguration
         }
@@ -46,7 +46,7 @@ extension UIKitVersionView.UIKitVersionViewController {
 
 extension UIKitVersionView.UIKitVersionViewController {
 
-    class ImageCell: UIView, UIContentView {
+    class ImageAttachmentView: UIView, UIContentView {
 
         private let stackView = UIStackView()
         private let textField = UITextField()
@@ -157,14 +157,14 @@ extension UIKitVersionView.UIKitVersionViewController {
     }
 }
 
-extension UIKitVersionView.UIKitVersionViewController.ImageCell {
+extension UIKitVersionView.UIKitVersionViewController.ImageAttachmentView {
 
     struct ContentConfiguration: UIContentConfiguration {
 
         var imageAttachment: UIKitVersionView.UIKitVersionViewController.ViewModel.ImageAttachment?
 
         func makeContentView() -> UIView & UIContentView {
-            let contentView = UIKitVersionView.UIKitVersionViewController.ImageCell(configuration: self)
+            let contentView = UIKitVersionView.UIKitVersionViewController.ImageAttachmentView(configuration: self)
             return contentView
         }
 
