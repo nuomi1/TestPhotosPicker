@@ -110,7 +110,7 @@ extension UIKitVersionView {
         @objc
         private func presentPickerViewController() {
             var configuration = PHPickerConfiguration(photoLibrary: .shared())
-            configuration.preselectedAssetIdentifiers = viewModel.selection.map(\.id)
+            configuration.preselectedAssetIdentifiers = viewModel.items.map(\.id)
             configuration.selectionLimit = 0
             configuration.selection = .default
             configuration.filter = nil
@@ -127,7 +127,7 @@ extension UIKitVersionView {
 extension UIKitVersionView.UIKitVersionViewController: PHPickerViewControllerDelegate {
 
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        viewModel.selection = results
+        viewModel.items = results
         picker.dismiss(animated: true)
         applySnapshot()
     }

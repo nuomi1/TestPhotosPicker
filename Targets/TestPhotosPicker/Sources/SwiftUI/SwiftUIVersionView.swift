@@ -20,7 +20,7 @@ struct SwiftUIVersionView: View {
             ImageList(viewModel: viewModel)
             Spacer()
             PhotosPicker(
-                selection: $viewModel.selection,
+                selection: $viewModel.items,
                 maxSelectionCount: nil,
                 selectionBehavior: .default,
                 matching: nil,

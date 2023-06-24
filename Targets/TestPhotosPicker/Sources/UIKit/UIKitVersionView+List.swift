@@ -22,13 +22,13 @@ extension UIKitVersionView.UIKitVersionViewController {
         return .list(using: .init(appearance: .insetGrouped))
     }
 
-    func makeDataSource() -> UICollectionViewDiffableDataSource<String, ViewModel.ImageAttachment> {
-        let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, ViewModel.ImageAttachment> { cell, _, itemIdentifier in
+    func makeDataSource() -> UICollectionViewDiffableDataSource<String, ImageAttachment> {
+        let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, ImageAttachment> { cell, _, itemIdentifier in
             var contentConfiguration = ImageAttachmentView.ContentConfiguration()
             contentConfiguration.imageAttachment = itemIdentifier
             cell.contentConfiguration = contentConfiguration
         }
-        let dataSource = UICollectionViewDiffableDataSource<String, ViewModel.ImageAttachment>(collectionView: collectionView) { collectionView, indexPath, itemIdentifier in
+        let dataSource = UICollectionViewDiffableDataSource<String, ImageAttachment>(collectionView: collectionView) { collectionView, indexPath, itemIdentifier in
             let cell = collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: itemIdentifier)
             return cell
         }
@@ -36,11 +36,11 @@ extension UIKitVersionView.UIKitVersionViewController {
     }
 
     func applySnapshot() {
-        var snapshot = NSDiffableDataSourceSnapshot<String, ViewModel.ImageAttachment>()
+        var snapshot = NSDiffableDataSourceSnapshot<String, ImageAttachment>()
         snapshot.appendSections([Constants.List.sectionIdentifier])
-        snapshot.appendItems(viewModel.attachments, toSection: Constants.List.sectionIdentifier)
+        snapshot.appendItems(viewModel.itemViewModels, toSection: Constants.List.sectionIdentifier)
         dataSource.apply(snapshot)
-        emptyView.isHidden = !viewModel.attachments.isEmpty
+        emptyView.isHidden = !viewModel.itemViewModels.isEmpty
     }
 }
 
@@ -161,7 +161,7 @@ extension UIKitVersionView.UIKitVersionViewController.ImageAttachmentView {
 
     struct ContentConfiguration: UIContentConfiguration {
 
-        var imageAttachment: UIKitVersionView.UIKitVersionViewController.ViewModel.ImageAttachment?
+        var imageAttachment: UIKitVersionView.UIKitVersionViewController.ImageAttachment?
 
         func makeContentView() -> UIView & UIContentView {
             let contentView = UIKitVersionView.UIKitVersionViewController.ImageAttachmentView(configuration: self)

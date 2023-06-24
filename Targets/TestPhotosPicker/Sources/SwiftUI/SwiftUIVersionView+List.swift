@@ -17,7 +17,7 @@ extension SwiftUIVersionView {
         var viewModel: ViewModel
 
         var body: some View {
-            if viewModel.attachments.isEmpty {
+            if viewModel.itemViewModels.isEmpty {
                 VStack {
                     Spacer()
                     Image(systemName: Constants.List.emptyImage)
@@ -25,7 +25,7 @@ extension SwiftUIVersionView {
                     Spacer()
                 }
             } else {
-                List(viewModel.attachments) { imageAttachment in
+                List(viewModel.itemViewModels) { imageAttachment in
                     ImageAttachmentView(imageAttachment: imageAttachment)
                 }
             }
@@ -38,7 +38,7 @@ extension SwiftUIVersionView {
     struct ImageAttachmentView: View {
 
         @ObservedObject
-        var imageAttachment: ViewModel.ImageAttachment
+        var imageAttachment: ImageAttachment
 
         var body: some View {
             HStack {

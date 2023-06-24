@@ -12,32 +12,13 @@ import SwiftUI
 
 extension SwiftUIVersionView {
 
-    @MainActor
-    class ViewModel: ObservableObject {
-
-        @Published
-        var selection: [PhotosPickerItem] = [] {
-            didSet { updateImagesIfNeeded() }
-        }
-
-        @Published
-        var attachments: [ImageAttachment] = []
-
-        private var attachmentByIdentifier: [String: ImageAttachment] = [:]
-
-        private func updateImagesIfNeeded() {
-            let newAttachments = selection.map { attachmentByIdentifier[$0.id] ?? ImageAttachment($0) }
-            let newAttachmentByIdentifier = newAttachments.reduce(into: [:]) { $0[$1.id] = $1 }
-            attachments = newAttachments
-            attachmentByIdentifier = newAttachmentByIdentifier
-        }
-    }
+    typealias ViewModel = ListViewModel<ImageAttachment>
 }
 
-extension SwiftUIVersionView.ViewModel {
+extension SwiftUIVersionView {
 
     @MainActor
-    class ImageAttachment: ObservableObject, Identifiable {
+    class ImageAttachment: ObservableObject, Identifiable, ItemViewModelInitializable {
 
         enum Status {
             case loading
@@ -68,8 +49,8 @@ extension SwiftUIVersionView.ViewModel {
 
         nonisolated var id: String { pickerItem.id }
 
-        init(_ pickerItem: PhotosPickerItem) {
-            self.pickerItem = pickerItem
+        required nonisolated init(_ item: PhotosPickerItem) {
+            pickerItem = item
         }
 
         func loadImage() async {

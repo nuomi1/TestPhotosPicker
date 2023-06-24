@@ -12,32 +12,13 @@ import UIKit
 
 extension UIKitVersionView.UIKitVersionViewController {
 
-    @MainActor
-    class ViewModel: ObservableObject {
-
-        @Published
-        var selection: [PHPickerResult] = [] {
-            didSet { updateImagesIfNeeded() }
-        }
-
-        @Published
-        var attachments: [ImageAttachment] = []
-
-        private var attachmentByIdentifier: [String: ImageAttachment] = [:]
-
-        private func updateImagesIfNeeded() {
-            let newAttachments = selection.map { attachmentByIdentifier[$0.id] ?? ImageAttachment($0) }
-            let newAttachmentByIdentifier = newAttachments.reduce(into: [:]) { $0[$1.id] = $1 }
-            attachments = newAttachments
-            attachmentByIdentifier = newAttachmentByIdentifier
-        }
-    }
+    typealias ViewModel = ListViewModel<ImageAttachment>
 }
 
-extension UIKitVersionView.UIKitVersionViewController.ViewModel {
+extension UIKitVersionView.UIKitVersionViewController {
 
     @MainActor
-    class ImageAttachment: ObservableObject, Identifiable, Hashable {
+    class ImageAttachment: ObservableObject, Identifiable, Hashable, ItemViewModelInitializable {
 
         enum Status {
             case loading
@@ -86,8 +67,8 @@ extension UIKitVersionView.UIKitVersionViewController.ViewModel {
 
         nonisolated var id: String { pickerResult.id }
 
-        init(_ pickerResult: PHPickerResult) {
-            self.pickerResult = pickerResult
+        required nonisolated init(_ item: PHPickerResult) {
+            pickerResult = item
         }
 
         func loadImage() async {
