@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import PhotosUI
 import UIKit
 
 extension UIKitVersionView.UIKitVersionViewController {
@@ -53,12 +54,14 @@ extension UIKitVersionView.UIKitVersionViewController {
         private let spacer = UIView()
         private let activityIndicatorView = UIActivityIndicatorView()
         private let imageView = UIImageView()
+        private let livePhotoView = PHLivePhotoView()
 
         var configuration: UIContentConfiguration {
             didSet { updateContentConfiguration(configuration as! ContentConfiguration) }
         }
 
         private var imageViewWidthConstraint: NSLayoutConstraint?
+        private var livePhotoViewWidthConstraint: NSLayoutConstraint?
 
         init(configuration: ContentConfiguration) {
             self.configuration = configuration
@@ -109,6 +112,13 @@ extension UIKitVersionView.UIKitVersionViewController {
             imageView.preferredSymbolConfiguration = symbolConfiguration
 
             stackView.addArrangedSubview(imageView)
+
+            // livePhotoView
+
+            stackView.addArrangedSubview(livePhotoView)
+            NSLayoutConstraint.activate([
+                livePhotoView.heightAnchor.constraint(equalTo: stackView.heightAnchor),
+            ])
         }
 
         private func updateContentConfiguration(_ configuration: ContentConfiguration) {
@@ -117,6 +127,7 @@ extension UIKitVersionView.UIKitVersionViewController {
             assert(configuration.imageAttachment != nil)
             let isLoading = configuration.imageAttachment?.imageStatus?.isLoading == true
             let image = configuration.imageAttachment?.imageStatus?.image
+            let livePhoto = configuration.imageAttachment?.imageStatus?.livePhoto
             let isFailed = configuration.imageAttachment?.imageStatus?.isFailed == true
             let resolvedImage = isFailed ? UIImage(systemName: Constants.Cell.failedImage) : image
 
@@ -138,11 +149,14 @@ extension UIKitVersionView.UIKitVersionViewController {
             imageView.image = resolvedImage
             imageView.isHidden = resolvedImage == nil
 
-            NSLayoutConstraint.deactivate([imageViewWidthConstraint].compactMap { $0 })
-            if let size = resolvedImage?.size, size.height != 0, resolvedImage?.isSymbolImage == false {
-                imageViewWidthConstraint = imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor, multiplier: size.width / size.height)
-                NSLayoutConstraint.activate([imageViewWidthConstraint].compactMap { $0 })
-            }
+            updateWidthConstraint(imageView, resolvedImage?.size, &imageViewWidthConstraint, resolvedImage?.isSymbolImage == false)
+
+            // livePhotoView
+
+            livePhotoView.livePhoto = livePhoto
+            livePhotoView.isHidden = livePhoto == nil
+
+            updateWidthConstraint(livePhotoView, livePhoto?.size, &livePhotoViewWidthConstraint)
 
             // imageStatus
 
@@ -152,6 +166,19 @@ extension UIKitVersionView.UIKitVersionViewController {
                     await configuration.imageAttachment?.loadImage()
                     self.configuration = self.configuration
                 }
+            }
+        }
+
+        private func updateWidthConstraint(
+            _ view: UIView,
+            _ size: CGSize?,
+            _ constraint: inout NSLayoutConstraint?,
+            _ condition: @autoclosure () -> Bool = true
+        ) {
+            NSLayoutConstraint.deactivate([constraint].compactMap { $0 })
+            if let size = size, size.height != 0, condition() {
+                constraint = view.widthAnchor.constraint(equalTo: view.heightAnchor, multiplier: size.width / size.height)
+                NSLayoutConstraint.activate([constraint].compactMap { $0 })
             }
         }
     }

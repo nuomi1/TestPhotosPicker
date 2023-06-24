@@ -23,29 +23,39 @@ extension UIKitVersionView.UIKitVersionViewController {
         enum Status {
             case loading
             case image(UIImage)
+            case livePhoto(PHLivePhoto)
             case failed(Error)
 
             var isLoading: Bool {
                 switch self {
                 case .loading:
                     return true
-                case .image, .failed:
+                case .image, .livePhoto, .failed:
                     return false
                 }
             }
 
             var image: UIImage? {
                 switch self {
-                case .loading, .failed:
+                case .loading, .livePhoto, .failed:
                     return nil
                 case let .image(image):
                     return image
                 }
             }
 
+            var livePhoto: PHLivePhoto? {
+                switch self {
+                case .loading, .image, .failed:
+                    return nil
+                case let .livePhoto(livePhoto):
+                    return livePhoto
+                }
+            }
+
             var isFailed: Bool {
                 switch self {
-                case .loading, .image:
+                case .loading, .image, .livePhoto:
                     return false
                 case .failed:
                     return true
@@ -77,20 +87,37 @@ extension UIKitVersionView.UIKitVersionViewController {
             imageStatus = .loading
 
             do {
-                let data = try await withCheckedThrowingContinuation { [unowned self] continuation in
-                    _ = self.pickerResult.itemProvider.loadTransferable(type: Data.self) { result in
-                        continuation.resume(with: result)
-                    }
-                }
-
-                if let uiImage = UIImage(data: data) {
-                    imageStatus = .image(uiImage)
+                if let livePhoto = try await loadTransferableLivePhoto(pickerResult.itemProvider) {
+                    imageStatus = .livePhoto(livePhoto)
+                } else if let image = try await loadTransferableImage(pickerResult.itemProvider) {
+                    imageStatus = .image(image)
                 } else {
                     throw LoadingError.contentTypeNotSupported
                 }
             } catch {
                 imageStatus = .failed(error)
             }
+        }
+
+        private func loadTransferableImage(_ itemProvider: NSItemProvider) async throws -> UIImage? {
+            guard itemProvider.canLoadObject(ofClass: UIImage.self) else { return nil }
+            let data = try await withCheckedThrowingContinuation { continuation in
+                _ = itemProvider.loadTransferable(type: Data.self) { result in
+                    continuation.resume(with: result)
+                }
+            }
+            let image = UIImage(data: data)
+            return image
+        }
+
+        private func loadTransferableLivePhoto(_ itemProvider: NSItemProvider) async throws -> PHLivePhoto? {
+            guard itemProvider.canLoadObject(ofClass: PHLivePhoto.self) else { return nil }
+            let livePhoto = try await withCheckedThrowingContinuation { continuation in
+                _ = itemProvider.loadTransferable(type: PHLivePhoto.self) { result in
+                    continuation.resume(with: result)
+                }
+            }
+            return livePhoto
         }
 
         nonisolated static func == (lhs: ImageAttachment, rhs: ImageAttachment) -> Bool {

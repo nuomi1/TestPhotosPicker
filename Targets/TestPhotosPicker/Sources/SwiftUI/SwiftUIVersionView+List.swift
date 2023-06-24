@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import PhotosUI
 import SwiftUI
 
 extension SwiftUIVersionView {
@@ -51,6 +52,9 @@ extension SwiftUIVersionView {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
+                case let .livePhoto(livePhoto):
+                    LivePhotoView(livePhoto: livePhoto)
+                        .aspectRatio(livePhoto.size.width / livePhoto.size.height, contentMode: .fit)
                 case .failed:
                     Image(systemName: Constants.Cell.failedImage)
                         .font(.system(Constants.Cell.failedImageFont))
@@ -65,5 +69,23 @@ extension SwiftUIVersionView {
                 }
             }
         }
+    }
+}
+
+struct LivePhotoView: UIViewRepresentable {
+
+    typealias UIViewType = PHLivePhotoView
+
+    let livePhoto: PHLivePhoto
+
+    private let livePhotoView = PHLivePhotoView()
+
+    func makeUIView(context: Context) -> UIViewType {
+        livePhotoView.livePhoto = livePhoto
+        return livePhotoView
+    }
+
+    func updateUIView(_ uiView: UIViewType, context: Context) {
+        // no-op
     }
 }
