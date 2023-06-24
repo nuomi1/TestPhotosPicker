@@ -21,7 +21,7 @@ enum Constants {
         static let emptyImage = "text.below.photo"
         static let emptyImageFont: Font.TextStyle = .largeTitle
         static let emptyImageUIFont: UIFont.TextStyle = .largeTitle
-        static let emptyImageUIColor: UIColor = .black
+        static let emptyImageUIColor: UIColor = .label
         static let sectionIdentifier = "ImageList"
         static let spacing: CGFloat = 8
     }
@@ -36,7 +36,7 @@ enum Constants {
         static let failedImage = "exclamationmark.triangle.fill"
         static let failedImageFont: Font.TextStyle = .largeTitle
         static let failedImageUIFont: UIFont.TextStyle = .largeTitle
-        static let failedImageUIColor: UIColor = .black
+        static let failedImageUIColor: UIColor = .label
     }
 
     enum PhotosPicker {
