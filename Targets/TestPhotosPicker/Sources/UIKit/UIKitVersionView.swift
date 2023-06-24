@@ -25,7 +25,7 @@ extension UIKitVersionView {
         typealias UIViewControllerType = UIKitVersionViewController
 
         func makeUIViewController(context: Context) -> UIViewControllerType {
-            let viewController = UIViewControllerType()
+            let viewController = UIKitVersionViewController()
             return viewController
         }
 
