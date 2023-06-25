@@ -45,9 +45,10 @@ extension SwiftUIVersionView {
 //                } else {
 //                    throw LoadingError.contentTypeNotSupported
 //                }
+
                 if let livePhoto = try await pickerItem.loadTransferable(type: PHLivePhoto.self) {
                     imageStatus = .livePhoto(livePhoto)
-                } else if let data = try await pickerItem.loadTransferable(type: Data.self), let image = UIImage(data: data) {
+                } else if let image = try await pickerItem.loadTransferable(type: UIImage.self) {
                     imageStatus = .image(image)
                 } else {
                     throw ImageLoadingError.contentTypeNotSupported

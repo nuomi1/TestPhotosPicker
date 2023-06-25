@@ -40,9 +40,9 @@ extension UIKitVersionView.UIKitVersionViewController {
             imageStatus = .loading
 
             do {
-                if let livePhoto = try await loadTransferableLivePhoto(pickerResult.itemProvider) {
+                if let livePhoto = try await pickerResult.itemProvider.loadTransferable(type: PHLivePhoto.self) {
                     imageStatus = .livePhoto(livePhoto)
-                } else if let image = try await loadTransferableImage(pickerResult.itemProvider) {
+                } else if let image = try await pickerResult.itemProvider.loadTransferable(type: UIImage.self) {
                     imageStatus = .image(image)
                 } else {
                     throw ImageLoadingError.contentTypeNotSupported
@@ -50,27 +50,6 @@ extension UIKitVersionView.UIKitVersionViewController {
             } catch {
                 imageStatus = .failed(error)
             }
-        }
-
-        private func loadTransferableImage(_ itemProvider: NSItemProvider) async throws -> UIImage? {
-            guard itemProvider.canLoadObject(ofClass: UIImage.self) else { return nil }
-            let data = try await withCheckedThrowingContinuation { continuation in
-                _ = itemProvider.loadTransferable(type: Data.self) { result in
-                    continuation.resume(with: result)
-                }
-            }
-            let image = UIImage(data: data)
-            return image
-        }
-
-        private func loadTransferableLivePhoto(_ itemProvider: NSItemProvider) async throws -> PHLivePhoto? {
-            guard itemProvider.canLoadObject(ofClass: PHLivePhoto.self) else { return nil }
-            let livePhoto = try await withCheckedThrowingContinuation { continuation in
-                _ = itemProvider.loadTransferable(type: PHLivePhoto.self) { result in
-                    continuation.resume(with: result)
-                }
-            }
-            return livePhoto
         }
 
         nonisolated static func == (lhs: ImageAttachment, rhs: ImageAttachment) -> Bool {
