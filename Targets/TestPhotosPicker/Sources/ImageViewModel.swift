@@ -8,6 +8,7 @@
 
 import AVKit
 import Foundation
+import PhotosUI
 
 @MainActor
 class ImageViewModel<Item: Identifiable>: ObservableObject, Identifiable, ItemViewModelInitializable {
@@ -31,12 +32,29 @@ class ImageViewModel<Item: Identifiable>: ObservableObject, Identifiable, ItemVi
 
     nonisolated var id: Item.ID { item.id }
 
+    var loadTransferableProviding: LoadTransferableProviding { fatalError("override") }
+
     required nonisolated init(_ item: Item) {
         self.item = item
     }
 
-    func loadImage() async {
-        fatalError("override")
+    final func loadImage() async {
+        guard imageStatus == nil || imageStatus?.isFailed == true else { return }
+        imageStatus = .loading
+        do {
+            if let livePhoto = try await loadTransferableProviding.loadTransferable(type: PHLivePhoto.self) {
+                imageStatus = .livePhoto(livePhoto)
+            } else if let asset = try await loadTransferableProviding.loadTransferable(type: AVURLAsset.self) {
+                imageStatus = .video(asset)
+                videoPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
+            } else if let image = try await loadTransferableProviding.loadTransferable(type: UIImage.self) {
+                imageStatus = .image(image)
+            } else {
+                throw ImageLoadingError.contentTypeNotSupported
+            }
+        } catch {
+            imageStatus = .failed(error)
+        }
     }
 
     @discardableResult
