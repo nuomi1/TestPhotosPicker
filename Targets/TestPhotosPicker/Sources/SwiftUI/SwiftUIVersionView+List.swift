@@ -6,6 +6,7 @@
 //  Copyright © 2023 nuomi1. All rights reserved.
 //
 
+import AVKit
 import Foundation
 import PhotosUI
 import SwiftUI
@@ -55,6 +56,18 @@ extension SwiftUIVersionView {
                 case let .livePhoto(livePhoto):
                     LivePhotoView(livePhoto: livePhoto)
                         .aspectRatio(livePhoto.size.width / livePhoto.size.height, contentMode: .fit)
+                case .video:
+                    VideoPlayer(player: imageAttachment.videoPlayer!) {
+                        Button {
+                            imageAttachment.playOrStopVideo()
+                        } label: {
+                            Image(systemName: imageAttachment.isPlaying ? Constants.Cell.stopImage : Constants.Cell.playImage)
+                        }
+                    }
+                    .aspectRatio(imageAttachment.videoAspectRatio, contentMode: .fit)
+                    .task {
+                        await imageAttachment.calculateVideoSize()
+                    }
                 case .failed:
                     Image(systemName: Constants.Cell.failedImage)
                         .font(.system(Constants.Cell.failedImageFont))

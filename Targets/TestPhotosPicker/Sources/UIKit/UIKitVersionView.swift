@@ -47,7 +47,7 @@ extension UIKitVersionView {
         lazy var compositionalLayout = makeCompositionalLayout()
         lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: compositionalLayout)
         lazy var dataSource = makeDataSource()
-        let button = UIButton()
+        let button = UIButton(configuration: .filled())
 
         override func viewDidLoad() {
             super.viewDidLoad()
@@ -94,9 +94,7 @@ extension UIKitVersionView {
 
             // button
 
-            var buttonConfiguration = UIButton.Configuration.plain()
-            buttonConfiguration.title = Constants.PhotosPicker.title
-            button.configuration = buttonConfiguration
+            button.configuration?.title = Constants.PhotosPicker.title
             button.addTarget(self, action: #selector(presentPickerViewController), for: .touchUpInside)
 
             button.translatesAutoresizingMaskIntoConstraints = false

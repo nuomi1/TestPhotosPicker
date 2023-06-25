@@ -17,24 +17,9 @@ extension SwiftUIVersionView {
 
 extension SwiftUIVersionView {
 
-    @MainActor
-    class ImageAttachment: ObservableObject, Identifiable, ItemViewModelInitializable {
+    class ImageAttachment: ImageViewModel<PhotosPickerItem> {
 
-        private let pickerItem: PhotosPickerItem
-
-        @Published
-        var imageStatus: ImageStatus?
-
-        @Published
-        var imageDescription = ""
-
-        nonisolated var id: String { pickerItem.id }
-
-        required nonisolated init(_ item: PhotosPickerItem) {
-            pickerItem = item
-        }
-
-        func loadImage() async {
+        override func loadImage() async {
             guard imageStatus == nil || imageStatus?.isFailed == true else { return }
 
             imageStatus = .loading
@@ -46,9 +31,12 @@ extension SwiftUIVersionView {
 //                    throw LoadingError.contentTypeNotSupported
 //                }
 
-                if let livePhoto = try await pickerItem.loadTransferable(type: PHLivePhoto.self) {
+                if let livePhoto = try await item.loadTransferable(type: PHLivePhoto.self) {
                     imageStatus = .livePhoto(livePhoto)
-                } else if let image = try await pickerItem.loadTransferable(type: UIImage.self) {
+                } else if let asset = try await item.loadTransferable(type: AVURLAsset.self) {
+                    imageStatus = .video(asset)
+                    videoPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
+                } else if let image = try await item.loadTransferable(type: UIImage.self) {
                     imageStatus = .image(image)
                 } else {
                     throw ImageLoadingError.contentTypeNotSupported

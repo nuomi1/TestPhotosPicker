@@ -15,13 +15,14 @@ enum ImageStatus {
     case loading
     case image(UIImage)
     case livePhoto(PHLivePhoto)
+    case video(AVURLAsset)
     case failed(Error)
 
     var isLoading: Bool {
         switch self {
         case .loading:
             return true
-        case .image, .livePhoto, .failed:
+        case .image, .livePhoto, .video, .failed:
             return false
         }
     }
@@ -30,7 +31,7 @@ enum ImageStatus {
         switch self {
         case let .image(image):
             return image
-        case .loading, .livePhoto, .failed:
+        case .loading, .livePhoto, .video, .failed:
             return nil
         }
     }
@@ -39,7 +40,16 @@ enum ImageStatus {
         switch self {
         case let .livePhoto(livePhoto):
             return livePhoto
-        case .loading, .image, .failed:
+        case .loading, .image, .video, .failed:
+            return nil
+        }
+    }
+
+    var video: AVURLAsset? {
+        switch self {
+        case let .video(video):
+            return video
+        case .loading, .image, .livePhoto, .failed:
             return nil
         }
     }
@@ -48,7 +58,7 @@ enum ImageStatus {
         switch self {
         case .failed:
             return true
-        case .loading, .image, .livePhoto:
+        case .loading, .image, .livePhoto, .video:
             return false
         }
     }
@@ -61,13 +71,21 @@ enum ImageLoadingError: Error {
 extension NSItemProvider {
 
     func loadTransferable<T: Transferable & NSItemProviderReading>(type: T.Type) async throws -> T? {
-        guard canLoadObject(ofClass: type) else { return nil }
+        guard _canLoadObject(ofClass: type) else { return nil }
         let received = try await withCheckedThrowingContinuation { continuation in
             _ = loadTransferable(type: type) { result in
                 continuation.resume(with: result)
             }
         }
         return received
+    }
+
+    private func _canLoadObject(ofClass aClass: NSItemProviderReading.Type) -> Bool {
+        if aClass is PHLivePhoto.Type { return canLoadObject(ofClass: aClass) }
+        if aClass is AVURLAsset.Type { return hasItemConformingToTypeIdentifier(UTType.movie.identifier) }
+        if aClass is UIImage.Type { return canLoadObject(ofClass: aClass) }
+        assertionFailure()
+        return false
     }
 }
 

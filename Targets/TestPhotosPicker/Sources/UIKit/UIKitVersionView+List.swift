@@ -6,6 +6,7 @@
 //  Copyright © 2023 nuomi1. All rights reserved.
 //
 
+import AVKit
 import Foundation
 import PhotosUI
 import UIKit
@@ -55,6 +56,8 @@ extension UIKitVersionView.UIKitVersionViewController {
         private let activityIndicatorView = UIActivityIndicatorView()
         private let imageView = UIImageView()
         private let livePhotoView = PHLivePhotoView()
+        private let playerView = AVPlayerView()
+        private let playerButton = UIButton(configuration: .plain())
 
         var configuration: UIContentConfiguration {
             didSet { updateContentConfiguration(configuration as! ContentConfiguration) }
@@ -62,6 +65,7 @@ extension UIKitVersionView.UIKitVersionViewController {
 
         private var imageViewWidthConstraint: NSLayoutConstraint?
         private var livePhotoViewWidthConstraint: NSLayoutConstraint?
+        private var playerViewWidthConstraint: NSLayoutConstraint?
 
         init(configuration: ContentConfiguration) {
             self.configuration = configuration
@@ -116,8 +120,26 @@ extension UIKitVersionView.UIKitVersionViewController {
             // livePhotoView
 
             stackView.addArrangedSubview(livePhotoView)
+            NSLayoutConstraint.activate([livePhotoView.heightAnchor.constraint(equalTo: stackView.heightAnchor)])
+
+            // playerView
+
+            stackView.addArrangedSubview(playerView)
+            NSLayoutConstraint.activate([playerView.heightAnchor.constraint(equalTo: stackView.heightAnchor)])
+
+            // playerButton
+
+            playerButton.configurationUpdateHandler = { button in
+                button.configuration?.image = UIImage(systemName: button.isSelected ? Constants.Cell.stopImage : Constants.Cell.playImage)
+                button.configuration?.baseBackgroundColor = .clear
+            }
+            playerButton.addTarget(self, action: #selector(playOrStop), for: .touchUpInside)
+
+            playerButton.translatesAutoresizingMaskIntoConstraints = false
+            playerView.addSubview(playerButton)
             NSLayoutConstraint.activate([
-                livePhotoView.heightAnchor.constraint(equalTo: stackView.heightAnchor),
+                playerButton.centerXAnchor.constraint(equalTo: playerView.centerXAnchor),
+                playerButton.centerYAnchor.constraint(equalTo: playerView.centerYAnchor),
             ])
         }
 
@@ -128,6 +150,7 @@ extension UIKitVersionView.UIKitVersionViewController {
             let isLoading = configuration.imageAttachment?.imageStatus?.isLoading == true
             let image = configuration.imageAttachment?.imageStatus?.image
             let livePhoto = configuration.imageAttachment?.imageStatus?.livePhoto
+            let video = configuration.imageAttachment?.imageStatus?.video
             let isFailed = configuration.imageAttachment?.imageStatus?.isFailed == true
             let resolvedImage = isFailed ? UIImage(systemName: Constants.Cell.failedImage) : image
 
@@ -158,6 +181,19 @@ extension UIKitVersionView.UIKitVersionViewController {
 
             updateWidthConstraint(livePhotoView, livePhoto?.size, &livePhotoViewWidthConstraint)
 
+            // playerView
+
+            playerView.player = configuration.imageAttachment?.videoPlayer
+            playerView.isHidden = video == nil
+
+            if video != nil {
+                Task { [weak self] in
+                    guard let self = self else { return }
+                    let size = await configuration.imageAttachment?.calculateVideoSize()
+                    self.updateWidthConstraint(self.playerView, size, &self.playerViewWidthConstraint)
+                }
+            }
+
             // imageStatus
 
             if configuration.imageAttachment?.imageStatus == nil {
@@ -176,10 +212,17 @@ extension UIKitVersionView.UIKitVersionViewController {
             _ condition: @autoclosure () -> Bool = true
         ) {
             NSLayoutConstraint.deactivate([constraint].compactMap { $0 })
-            if let size = size, size.height != 0, condition() {
+            if let size, size.height > 0, condition() {
                 constraint = view.widthAnchor.constraint(equalTo: view.heightAnchor, multiplier: size.width / size.height)
                 NSLayoutConstraint.activate([constraint].compactMap { $0 })
             }
+        }
+
+        @objc
+        private func playOrStop(_ sender: UIButton) {
+            let configuration = configuration as! ContentConfiguration
+            configuration.imageAttachment?.playOrStopVideo()
+            sender.isSelected.toggle()
         }
     }
 }
@@ -198,5 +241,18 @@ extension UIKitVersionView.UIKitVersionViewController.ImageAttachmentView {
         func updated(for state: UIConfigurationState) -> ContentConfiguration {
             return self
         }
+    }
+}
+
+@dynamicMemberLookup
+class AVPlayerView: UIView {
+
+    override static var layerClass: AnyClass { AVPlayerLayer.self }
+
+    private var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
+
+    subscript<T>(dynamicMember keyPath: ReferenceWritableKeyPath<AVPlayerLayer, T>) -> T {
+        get { playerLayer[keyPath: keyPath] }
+        set { playerLayer[keyPath: keyPath] = newValue }
     }
 }

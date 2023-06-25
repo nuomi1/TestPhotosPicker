@@ -17,32 +17,20 @@ extension UIKitVersionView.UIKitVersionViewController {
 
 extension UIKitVersionView.UIKitVersionViewController {
 
-    @MainActor
-    class ImageAttachment: ObservableObject, Identifiable, Hashable, ItemViewModelInitializable {
+    class ImageAttachment: ImageViewModel<PHPickerResult>, Hashable {
 
-        private let pickerResult: PHPickerResult
-
-        @Published
-        var imageStatus: ImageStatus?
-
-        @Published
-        var imageDescription = ""
-
-        nonisolated var id: String { pickerResult.id }
-
-        required nonisolated init(_ item: PHPickerResult) {
-            pickerResult = item
-        }
-
-        func loadImage() async {
+        override func loadImage() async {
             guard imageStatus == nil || imageStatus?.isFailed == true else { return }
 
             imageStatus = .loading
 
             do {
-                if let livePhoto = try await pickerResult.itemProvider.loadTransferable(type: PHLivePhoto.self) {
+                if let livePhoto = try await item.itemProvider.loadTransferable(type: PHLivePhoto.self) {
                     imageStatus = .livePhoto(livePhoto)
-                } else if let image = try await pickerResult.itemProvider.loadTransferable(type: UIImage.self) {
+                } else if let asset = try await item.itemProvider.loadTransferable(type: AVURLAsset.self) {
+                    imageStatus = .video(asset)
+                    videoPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
+                } else if let image = try await item.itemProvider.loadTransferable(type: UIImage.self) {
                     imageStatus = .image(image)
                 } else {
                     throw ImageLoadingError.contentTypeNotSupported

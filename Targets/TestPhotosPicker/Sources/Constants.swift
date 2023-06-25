@@ -37,6 +37,8 @@ enum Constants {
         static let failedImageFont: Font.TextStyle = .largeTitle
         static let failedImageUIFont: UIFont.TextStyle = .largeTitle
         static let failedImageUIColor: UIColor = .label
+        static let playImage = "play"
+        static let stopImage = "stop"
     }
 
     enum PhotosPicker {
