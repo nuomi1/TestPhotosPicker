@@ -20,30 +20,10 @@ extension SwiftUIVersionView {
     @MainActor
     class ImageAttachment: ObservableObject, Identifiable, ItemViewModelInitializable {
 
-        enum Status {
-            case loading
-            case image(Image)
-            case livePhoto(PHLivePhoto)
-            case failed(Error)
-
-            var isFailed: Bool {
-                switch self {
-                case .loading, .image, .livePhoto:
-                    return false
-                case .failed:
-                    return true
-                }
-            }
-        }
-
-        enum LoadingError: Error {
-            case contentTypeNotSupported
-        }
-
         private let pickerItem: PhotosPickerItem
 
         @Published
-        var imageStatus: Status?
+        var imageStatus: ImageStatus?
 
         @Published
         var imageDescription = ""
@@ -67,10 +47,10 @@ extension SwiftUIVersionView {
 //                }
                 if let livePhoto = try await pickerItem.loadTransferable(type: PHLivePhoto.self) {
                     imageStatus = .livePhoto(livePhoto)
-                } else if let data = try await pickerItem.loadTransferable(type: Data.self), let uiImage = UIImage(data: data) {
-                    imageStatus = .image(Image(uiImage: uiImage))
+                } else if let data = try await pickerItem.loadTransferable(type: Data.self), let image = UIImage(data: data) {
+                    imageStatus = .image(image)
                 } else {
-                    throw LoadingError.contentTypeNotSupported
+                    throw ImageLoadingError.contentTypeNotSupported
                 }
             } catch {
                 imageStatus = .failed(error)

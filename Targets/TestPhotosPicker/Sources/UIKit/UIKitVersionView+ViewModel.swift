@@ -20,57 +20,10 @@ extension UIKitVersionView.UIKitVersionViewController {
     @MainActor
     class ImageAttachment: ObservableObject, Identifiable, Hashable, ItemViewModelInitializable {
 
-        enum Status {
-            case loading
-            case image(UIImage)
-            case livePhoto(PHLivePhoto)
-            case failed(Error)
-
-            var isLoading: Bool {
-                switch self {
-                case .loading:
-                    return true
-                case .image, .livePhoto, .failed:
-                    return false
-                }
-            }
-
-            var image: UIImage? {
-                switch self {
-                case .loading, .livePhoto, .failed:
-                    return nil
-                case let .image(image):
-                    return image
-                }
-            }
-
-            var livePhoto: PHLivePhoto? {
-                switch self {
-                case .loading, .image, .failed:
-                    return nil
-                case let .livePhoto(livePhoto):
-                    return livePhoto
-                }
-            }
-
-            var isFailed: Bool {
-                switch self {
-                case .loading, .image, .livePhoto:
-                    return false
-                case .failed:
-                    return true
-                }
-            }
-        }
-
-        enum LoadingError: Error {
-            case contentTypeNotSupported
-        }
-
         private let pickerResult: PHPickerResult
 
         @Published
-        var imageStatus: Status?
+        var imageStatus: ImageStatus?
 
         @Published
         var imageDescription = ""
@@ -92,7 +45,7 @@ extension UIKitVersionView.UIKitVersionViewController {
                 } else if let image = try await loadTransferableImage(pickerResult.itemProvider) {
                     imageStatus = .image(image)
                 } else {
-                    throw LoadingError.contentTypeNotSupported
+                    throw ImageLoadingError.contentTypeNotSupported
                 }
             } catch {
                 imageStatus = .failed(error)

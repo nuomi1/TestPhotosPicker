@@ -49,7 +49,7 @@ extension SwiftUIVersionView {
                 case .loading:
                     ProgressView()
                 case let .image(image):
-                    image
+                    Image(uiImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                 case let .livePhoto(livePhoto):
